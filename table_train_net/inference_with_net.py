@@ -45,18 +45,18 @@ This two assumptions let us considering more boxes and with very low scores to m
 
 With the new boxes and their scores - even if not precise because of merged one - we can the boxes found.
 This script provides some for loops over all the PATS_TO_TEST_IMAGE for every TEST_SCORES and every PATHS_TO_CKPTS that are present in
-inference_costants.py. They are written in TEST_PATH and every folder will have the name of the bmp image you put as test.
+inference_constants.py. They are written in TEST_PATH and every folder will have the name of the bmp image you put as test.
 
 """
 import numpy as np
 import os
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import errno
 import copy
 from PIL import Image
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-from inference_costants import \
+from inference_constants import \
     PATHS_TO_TEST_IMAGE, \
     PATHS_TO_CKPTS, \
     TEST_SCORES, \
@@ -103,39 +103,47 @@ def check_if_vertically_overlapped(coord_a, coord_b):
     :param coord_b:
     :return: true if intersected, false instead
     """
-    return \
-        coord_a['y_min'] <= coord_b['y_min'] <= coord_a['y_max'] or \
-        coord_a['y_min'] <= coord_b['y_max'] <= coord_a['y_max'] or \
-        (coord_a['y_min'] > coord_b['y_min'] and coord_a['y_max'] < coord_b['y_max']) or \
-        (coord_a['y_min'] < coord_b['y_min'] and coord_a['y_max'] > coord_b['y_max'])
+    return (
+        coord_a['y_min'] <= coord_b['y_min'] <= coord_a['y_max'] or
+        coord_a['y_min'] <= coord_b['y_max'] <= coord_a['y_max'] or
+        coord_b['y_min'] <= coord_a['y_min'] <= coord_b['y_max'] or
+        coord_b['y_min'] <= coord_a['y_max'] <= coord_b['y_max']
+    )
+    # return \
+    #     coord_a['y_min'] <= coord_b['y_min'] <= coord_a['y_max'] or \
+    #     coord_a['y_min'] <= coord_b['y_max'] <= coord_a['y_max'] or \
+    #     (coord_a['y_min'] > coord_b['y_min'] and coord_a['y_max'] < coord_b['y_max']) or \
+    #     (coord_a['y_min'] < coord_b['y_min'] and coord_a['y_max'] > coord_b['y_max'])
 
 
 def merge_vertically_overlapping_boxes(boxes):
     merged_boxes = [boxes[0]]
-    flag = False
+    any_box_merged = False
     for box in boxes[1:]:
+        merged = False
         for m_box in merged_boxes:
             coord_m_box = {
                 'y_min': m_box[0],
                 'x_min': m_box[1],
                 'y_max': m_box[2],
-                'x_max': m_box[3]
+                'x_max': m_box[3],
             }
             coord_box = {
                 'y_min': box[0],
                 'x_min': box[1],
                 'y_max': box[2],
-                'x_max': box[3]
+                'x_max': box[3],
             }
             if check_if_vertically_overlapped(coord_m_box, coord_box):
-                flag = True
+                merged = True
+                any_box_merged = True
                 if m_box[0] > box[0]:
                     m_box[0] = box[0]
                 if m_box[2] < box[2]:
                     m_box[2] = box[2]
-        if not flag:
+        if not merged:
             merged_boxes.append(box)
-    if flag:
+    if any_box_merged:
         return merge_vertically_overlapping_boxes(merged_boxes)
     else:
         return merged_boxes
@@ -290,14 +298,14 @@ if __name__ == '__main__':
         # since the frozen script makes the frozen graph always at the same place
         # PATH_TO_CKPT = PATH_TO_CKPT + '/frozen/frozen_inference_graph.pb'
         for test_path in TEST_BMP_PATHS:
-            file_name = os.path.splitext(test_path)[0] \
+            file_name = os.path.splitext(os.path.basename(test_path))[0] \
                 .split("\\")[-1]
 
             # LOADING THE GRAPH: SHOULD-NOT-BE-TOUCHED PART
             detection_graph = tf.Graph()
             with detection_graph.as_default():
                 # other TF commands
-                od_graph_def = tf.GraphDef()
+                od_graph_def = tf.compat.v1.GraphDef()
                 with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
                     serialized_graph = fid.read()
                     od_graph_def.ParseFromString(serialized_graph)
@@ -354,6 +362,7 @@ if __name__ == '__main__':
                             max_num_boxes=MAX_NUM_BOXES,
                             min_score=SCORE
                         )
+                        print(best_boxes)
                         coords = []
                         # print(best_boxes)
                         if not best_boxes == []:

@@ -34,7 +34,7 @@ Before we go on make sure you have everything installed to be able to use the pr
 The project is made up of different parts that acts together as a pipeline.
 
 #### Take confidence with costants
-I have prepared two "costants" files: `dataset_costants.py` and `inference_constants.py`.
+I have prepared two "constants" files: `dataset_constants.py` and `inference_constants.py`.
 The first contains all those costants that are useful to use to create dataset, the second to make
 inference with the frozen graph. If you just want to run the project you should modify only those two files.
  
@@ -42,8 +42,7 @@ inference with the frozen graph. If you just want to run the project you should 
 Since colors are not useful for table detection, we can convert all the images in `.jpeg` 8-bit single channel images.
 [This](https://www.researchgate.net/publication/320243569_Table_Detection_Using_Deep_Learning))
 transformation is still under testing.
-Use `python dataset/img_to_jpeg.py` after setting `dataset_costants.py`:
-* `DPI_EXTRACTION`: output quality of the images;
+Use `python dataset/img_to_jpeg.py` after setting `dataset_constants.py`:
 * `PATH_TO_IMAGES`: path/to/datase/images;
 * `IMAGES_EXTENSION`: extension of the extracted images. The only one tested is `.jpeg`.
 
@@ -53,7 +52,7 @@ The dataset was take from
 . It comes with a `xml` notation file with formulas, images and tables per image.
 Tensorflow instead can build its own TFRecord from csv informations, so we need to convert
 the `xml` files into a `csv` one.
-Use `python dataset/generate_database_csv.py` to do this conversion after setting `dataset_costants.py`:
+Use `python dataset/generate_database_csv.py` to do this conversion after setting `dataset_constants.py`:
 * `TRAIN_CSV_NAME`: name for `.csv` train output file; 
 * `TEST_CSV_NAME`: name for `.csv` test output file;
 * `TRAIN_CSV_TO_PATH`: folder path for `TRAIN_CSV_NAME`;
@@ -68,7 +67,7 @@ Some networks don't digest well little boxes, so I put this check.
 #### Generate TF records file
 `csv` files and images are ready: now we need to create our TF record file to feed Tensorflow.
 Use `python generate_tf_records.py` to create the train and test`.record` files that we will need later. No need to configure
-`dataset_costants.py`
+`dataset_constants.py`
 
 #### Train the network
 Inside `trained_models` there are some folders. In each one there are two files, a `.config` and a `.txt` one.
@@ -101,7 +100,7 @@ python export_inference_graph.py \
 
 #### Test your graph!
 Now that you have your graph you can try it out:
-Run `inference_with_net.py` and set `inference_costants.py`:
+Run `inference_with_net.py` and set `inference_constants.py`:
 * `PATHS_TO_TEST_IMAGE`: path list to all the test images;
 * `BMP_IMAGE_TEST_TO_PATH`: path to which save test output files;
 * `PATHS_TO_LABELS`: path to `.pbtxt` label file;

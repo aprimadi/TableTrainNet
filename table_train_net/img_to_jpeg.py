@@ -5,25 +5,26 @@ from PIL import Image
 import cv2
 import numpy as np
 import os
-from dataset_costants import \
-    PATH_TO_IMAGES, \
-    IMAGES_EXTENSION, \
-    DPI_EXTRACTION
 import pyprind
-from personal_errors import InputError, OutputError
 import logging
+
+from dataset_constants import PATH_TO_IMAGES, IMAGES_EXTENSION, DPI_EXTRACTION
+from personal_errors import InputError, OutputError
 from logger import TimeHandler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(TimeHandler().handler)
 
+def preprocess_image(img):
+    # Grayscale the image
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def uglify_image(pil_image):
-    img = np.asarray(pil_image)
-    img = cv2.distanceTransform(img, distanceType=cv2.DIST_L2, maskSize=5)
-    return Image.fromarray(img).convert('L')
+    # Perform histogram equalization
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    equ = clahe.apply(gray)
 
+    return equ
 
 def img_to_jpeg(img_path):
     """
@@ -49,14 +50,11 @@ def img_to_jpeg(img_path):
                     file_path = os.path.join(gen_path, file_name)
                     if not os.path.isfile(file_path):
                         raise InputError('{} is not a valid image'.format(file_path))
-                    with Image.open(file_path) as img:
-                        img = img.convert('L')
-                        img = uglify_image(img)
-                        # path is valid as it has been checked before
-                        img.save(os.path.join(gen_path, file_no_extension + IMAGES_EXTENSION),
-                                 IMAGES_EXTENSION.replace('.', ''), dpi=(DPI_EXTRACTION, DPI_EXTRACTION))
-                        img_converted_counter += 1
-                        logger.info('{} succesfully written on disk!'.format(file_name))
+                    img = cv2.imread(file_path)
+                    img = preprocess_image(img)
+                    cv2.imwrite(os.path.join(gen_path, file_no_extension + IMAGES_EXTENSION), img)
+                    img_converted_counter += 1
+                    logger.info('{} succesfully written on disk!'.format(file_name))
             bar.update()
     if img_found_counter == 0:
         logger.warning('No img to convert found!')
@@ -64,6 +62,6 @@ def img_to_jpeg(img_path):
         if img_converted_counter == 0:
             logger.info('No img to convert left!')
 
-
 if __name__ == '__main__':
     img_to_jpeg(PATH_TO_IMAGES)
+

@@ -12,8 +12,9 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 import pyprind
 from random import shuffle
+
 from personal_errors import InputError, OutputError
-from dataset_costants import \
+from dataset_constants import \
     TRAINING_PERCENTAGE, \
     TABLE_DICT, \
     ANNOTATIONS_EXTENSION, \

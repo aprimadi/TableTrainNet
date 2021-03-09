@@ -1,6 +1,8 @@
 # Personalized part
+.DS_Store
 .idea
 *.png
+vimsession
 dataset/Images/**/*.jpeg
 
 trained_models/

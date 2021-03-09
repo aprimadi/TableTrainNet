@@ -1,22 +1,22 @@
 """
-It generates the train and tf records that are set by dataset_costants.py file.
+It generates the train and tf records that are set by dataset_constants.py file.
 """
 
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from dataset_costants import TABLE_DICT
+from dataset_constants import TABLE_DICT
 
 import os
 import io
 import pandas as pd
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from PIL import Image
 from object_detection.utils import dataset_util
 from collections import namedtuple
-from dataset_costants import \
+from dataset_constants import \
     TF_TRAIN_RECORD_TO_PATH, \
     TF_TRAIN_RECORD_NAME, \
     TF_TEST_RECORD_TO_PATH, \
